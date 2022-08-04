@@ -1,32 +1,29 @@
 pipeline {
-    agent any
-    stages {
-        stage('Master Branch Deploy Code') {
-            when {
-                branch 'master'
-            }
+   agent any
+   environment {
+       DOCKERHUB_CREDENTIALS = credentials('dockerHub')
+    }
+   stages {
+        stage('Checkout') {
             steps {
-                sh """
-                echo "Building Artifact from Master branch"
-                """
- 
-                sh """
-                echo "Deploying Code from Master branch"
-                """
+               git branch: 'main', credentialsId: 'github', url: 'https://github.com/Omprakashsurwase/Assessment_deplo_appy_on_kubernetes.git'
+                sh "ls -lart ./*"
+            }
+        } 
+         stage('Build-Image'){
+            steps {
+                sh "docker build -t omprakashsurwase/tomcat ."
+            }
+         }
+ stage('login to dockerhub') {
+            steps{
+                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
             }
         }
-        stage('Develop Branch Deploy Code') {
-            when {
-                branch 'develop'
+        stage('push image') {
+            steps{
+                sh 'docker push omprakashsurwase/tomcat'
             }
-            steps {
-                sh """
-                echo "Building Artifact from Develop branch"
-                """
-                sh """
-                echo "Deploying Code from Develop branch"
-                """
-           }
         }
     }
 }
